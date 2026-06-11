@@ -1,0 +1,14 @@
+{
+  "report_timestamp": "2026-06-10_17-01-27",
+  "mission_duration": "4m 28.46s",
+  "scheduled_runtime": "4m 6.75s",
+  "latency_drift": "8.80%",
+  "tasks_completed": {
+    "Package Pick Up": 3,
+    "Box": 3,
+    "Package Popcorn": 3,
+    "Wrapping": 3,
+    "Sealing": 3,
+    "Delivery": 3
+  }
+}
