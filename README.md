@@ -33,6 +33,38 @@ Data Logger Node
 
 The Task Manager coordinates warehouse operations while other nodes communicate task information, status updates, and mission data through ROS2 topics.
 
+## Warehouse Layout
+
+```text
+Y
+^
+10|  . . . . . . . . . . .
+9 |  . . . . . . . . . . .
+8 |  . W . . . S . . . . .
+7 |  . . . . . . . . . . .
+6 |  . . . . . . . . . . .
+5 |  . . . . . . . . . . D
+4 |  . . . . . . . . . . .
+3 |  . . . . . . . . . . .
+2 |  . . . . . . . . . P .
+1 |  . . . U . . . B . . .
+0 |  O . . . . . . . . . .
+  +------------------------> X
+     0 1 2 3 4 5 6 7 8 9 10
+```
+
+### Legend
+
+| Symbol | Location | Coordinates |
+|----------|----------|----------|
+| O | Origin / Home Base | (0,0) |
+| U | Package Pick Up | (3,1) |
+| B | Box Station | (7,1) |
+| P | Package Popcorn | (9,2) |
+| W | Wrapping Station | (1,8) |
+| S | Sealing Station | (5,8) |
+| D | Delivery Station | (10,5) |
+
 ## Example Mission Report
 
 ```json
