@@ -21,25 +21,41 @@ public:
             "Delivery"
         };
 
-        // Subscribe to the topic status_update and swap_task
+        // Subscribe to the topics "status_update" and "swap_task" from status_manager.cpp and task_execution.cpp
         status_subscription = this->create_subscription<std_msgs::msg::String>(
             "status_update", 10, std::bind(&TaskManager::topic_callback, this, std::placeholders::_1));
         swap_subscription = this->create_subscription<std_msgs::msg::String>(
             "swap_task", 10, std::bind(&TaskManager::swap_callback, this, std::placeholders::_1));
         
-        // Publish the current task to the topic "current_task"
+        // Publish the current task to the topic "current_task" to task_execution.cpp and data_logger.cpp
         task_publisher = this->create_publisher<std_msgs::msg::String>("current_task", 10);
     }
 
 private:
    void topic_callback(const std_msgs::msg::String::SharedPtr msg) const
 {
+    auto message = std_msgs::msg::String();
     // When the status is "Active", publish the current task
     if (msg->data == "Active")
         {
-            auto message = std_msgs::msg::String();
             message.data = task_list[current_task_index];
             RCLCPP_INFO(this->get_logger(), "Current Task Set: '%s'", message.data.c_str());
+            // Publish the current task to the topic
+            task_publisher->publish(message);
+        }
+    // When the status is "Closing", publish "Closing"
+    else if (msg->data == "Closing")
+        {
+            message.data = "Origin";
+            RCLCPP_INFO(this->get_logger(), "Returning to '%s'.", message.data.c_str());
+            // Publish the current task to the topic
+            task_publisher->publish(message);
+        }
+    // When the status is invalid, publish "Unknown"
+    else
+        {
+            message.data = "Unknown";
+            RCLCPP_INFO(this->get_logger(), "Unknown status: '%s'", message.data.c_str());
             // Publish the current task to the topic
             task_publisher->publish(message);
         }
@@ -47,10 +63,21 @@ private:
 
     void swap_callback(const std_msgs::msg::String::SharedPtr msg) 
 {
-        // When the message is "swap", advance the task index
+    // When the message is "swap", advance the task index
     if (msg->data == "swap") 
     {
         current_task_index = (current_task_index + 1) % task_list.size();
+    }
+    else if (msg->data == "finished")
+    {
+        auto message = std_msgs::msg::String();
+        message.data = "finish";
+        RCLCPP_INFO(this->get_logger(), "We are '%s'.", message.data.c_str());
+        task_publisher->publish(message);
+    }
+    else
+    {
+        // Ignore unknown messages
     }
 }
 

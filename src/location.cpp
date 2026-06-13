@@ -13,10 +13,11 @@ public:
         location_list = {0.0, 0.0}; 
         target_location = {0.0, 0.0};
 
-         // Subscriber to listen to actions from TaskExecution
+         // Subscriber to listen to actions from task_execution.cpp
         task_subscription = this->create_subscription<std_msgs::msg::String>(
             "task_coordinates", 10, std::bind(&Location::topic_callback, this, std::placeholders::_1));
 
+        // Publishes to the topic "updated_location" for task_execution.cpp
         location_publisher = this->create_publisher<std_msgs::msg::String>("updated_location", 10);
     }
 
@@ -25,12 +26,14 @@ private:
     {
         std::sscanf(msg->data.c_str(), "(%lf, %lf)", &target_location[0], &target_location[1]);
 
+        // Calculate the distance to the target
         double dx = target_location[0] - location_list[0];
         double dy = target_location[1] - location_list[1];
         double distance = std::sqrt(dx * dx + dy * dy);
 
         // Only move if we are not already at the target
         if (distance > 0.001) { 
+            // Moves vector distance of 1.5 units/s
             double step = 0.375;
 
             if (distance <= step) {

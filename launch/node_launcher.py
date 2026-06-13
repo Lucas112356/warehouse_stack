@@ -1,5 +1,8 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import RegisterEventHandler, EmitEvent
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 import os
 from ament_index_python.packages import get_package_share_directory
 
@@ -8,6 +11,22 @@ def generate_launch_description():
         get_package_share_directory('warehouse_stack'),
         'config',
         'parameter.yaml'
+    )
+
+    data_logger_node = Node(
+        package='warehouse_stack',
+        executable='data_logger',
+        parameters=[config]
+    )
+
+    # terminates all nodes when data_logger finishes
+    sys_shutdown_handler = RegisterEventHandler(
+        OnProcessExit(
+            target_action=data_logger_node,
+            on_exit=[
+                EmitEvent(event=Shutdown(reason='Data Logger finished and requested system shutdown.'))
+            ]
+        )
     )
 
     return LaunchDescription([
@@ -32,9 +51,6 @@ def generate_launch_description():
             parameters=[config]
         ),
         
-        Node(
-            package='warehouse_stack',
-            executable='data_logger',
-            parameters=[config]
-        )
+        data_logger_node,
+        sys_shutdown_handler
     ])

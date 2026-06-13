@@ -1,13 +1,17 @@
 # ROS2 Warehouse Management Simulation
 
 ## Overview
-
 A ROS2 (C++) warehouse automation simulation designed to model task scheduling, mission execution, location tracking, and operational reporting within a multi-node robotic system.
 
 The project demonstrates distributed ROS2 node communication through a publisher-subscriber architecture while simulating warehouse workflows and generating automated mission performance reports.
 
-## Features
+## Latest Update: v1.1
+- **Closing Status:** Added a dedicated operational state for system shutdown.
+- **Return-to-Home:** Robot now returns to origin before finalizing during closing status.
+- **JSON Reporting:** Mission reports are now triggered automatically upon returning to origin instead of task completion basis.
+- **Proper Termination:** All nodes now gracefully shutdown after the report is generated.
 
+## Features
 - Multi-node ROS2 architecture
 - Warehouse task scheduling and execution
 - Continuous task queue cycling
@@ -16,25 +20,33 @@ The project demonstrates distributed ROS2 node communication through a publisher
 - Automated JSON mission report generation
 - Mission duration and timing analysis
 - Performance logging and task completion metrics
+- Automated mission finalization and graceful node termination
 
 ## System Architecture
-
 ```text
-Status Monitor Node
-        ↓
-Task Manager Node
-        ↓
-Task Execution Node
-        ↓
-Location Tracker Node
-        ↓
-Data Logger Node
+                  User Input
+                      ↓
+                Status Monitor
+                      ↓
+                 Task Manager
+                ↙          ↘
+               ↓             ↕
+       Data Logger     Task Execution
+                             ↕
+                      Location Tracker
 ```
 
-The Task Manager coordinates warehouse operations while other nodes communicate task information, status updates, and mission data through ROS2 topics.
+
+## Node Responsibilities
+| Node                 | Responsibility                                                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Status Monitor**   | Receives operator commands and manages the robot's current operational state. |
+| **Task Manager**     | Central coordinator responsible for task scheduling, mission progression and workflow decisions.                     |
+| **Task Execution**   | Executes warehouse tasks based on current state and reports task completion status.                                         |
+| **Location Tracker** | Maintains the robot's current position and provides navigation feedback.                                        |
+| **Data Logger**      | Records mission metrics, task completion statistics, recording frequency and generates JSON mission reports.                      |
 
 ## Warehouse Layout
-
 ```text
 Y
 ^
@@ -54,7 +66,6 @@ Y
 ```
 
 ### Legend
-
 | Symbol | Location | Coordinates |
 |----------|----------|----------|
 | O | Origin / Home Base | (0,0) |
@@ -66,26 +77,32 @@ Y
 | D | Delivery Station | (10,5) |
 
 ## Example Mission Report
-
 ```json
 {
-  "report_timestamp": "2026-06-10_16-30-56",
-  "mission_duration": "4m 28.09s",
-  "scheduled_runtime": "4m 6.75s",
-  "latency_drift": "8.65%",
+  "report_timestamp": "2026-06-12_10-26-29",
+  "mission_duration": "3m 2.15s",
+  "target_publishing_rate": "4.00 Hz",
+  "average_publishing_rate": "3.78 Hz",
   "tasks_completed": {
-    "Package Pick Up": 3,
-    "Box": 3,
-    "Package Popcorn": 3,
-    "Wrapping": 3,
-    "Sealing": 3,
-    "Delivery": 3
+    "Package Pick Up": 2,
+    "Box": 2,
+    "Package Popcorn": 2,
+    "Wrapping": 2,
+    "Sealing": 2,
+    "Delivery": 2
   }
 }
 ```
+## Verification Results
+| Condition | Result |
+| :--- | :--- |
+| Target Publishing Rate | 4.00 Hz |
+| Observed Publishing Rate | 3.65 - 4.00 Hz |
+| Longest Validation Run | 4 mission cycles |
+| Maximum Tasks Completed | 24 consecutive tasks |
+| Graceful Shutdown Verrified | Passed |
 
 ## Technologies
-
 - ROS2
 - C++
 - CMake
@@ -94,12 +111,14 @@ Y
 - State Management
 - Task Scheduling
 
-## Future Development
+## Version History
+- **v1.0:** Initial release featuring task looping + basic JSON reporting.
+- **v1.1:** Closing status, return-to-home functionality and proper node termination.
 
-- Return-to-base behavior (v1.1)
-- Battery management system (v1.2)
-- Mission interruption and recover (v1.3)
+## Roadmap
+- **v1.2:** Battery management + charging station
+- **v1.3:** Mission interruption + recovery
+- **v2.0:** Fleet communication
 
 ## Author
-
 Lucas Kwan

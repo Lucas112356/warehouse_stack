@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <cmath>
+#include <algorithm>
 
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -28,7 +29,7 @@ public:
     //  Real timer
     start_time = this->now();
 
-    // Subscribes to the topic "current_task"
+    // Subscribes to the topic "current_task" from task_manager.cpp
     subscription = this->create_subscription<std_msgs::msg::String>(
         "current_task", 10, std::bind(&DataLogger::topic_callback, this, _1));
   }
@@ -36,15 +37,20 @@ public:
 private:
   void topic_callback(const std_msgs::msg::String::SharedPtr msg) 
   {
-    // Simulates theoretical time 
-    code_time += 0.25; 
+    // counts the number of times the node has received a message
+    packet_number++; 
 
-    // Updates task completion count
+    RCLCPP_INFO(this->get_logger(), "Warehouse timer: %.2f seconds", packet_number / 4.0);
+
+    // Check if the task has changed
     if(current_task_name != msg->data) {
-      auto it = std::find(task_list.begin(), task_list.end(), current_task_name);
-      if (it != task_list.end()) {
-          int index = std::distance(task_list.begin(), it);
-          task_completions[index]++;
+      
+      if (msg->data != "Origin" && msg->data != "finish") {
+          auto it = std::find(task_list.begin(), task_list.end(), current_task_name);
+          if (it != task_list.end()) {
+              int index = std::distance(task_list.begin(), it);
+              task_completions[index]++;
+          }
       }
       current_task_name = msg->data;
     }
@@ -53,17 +59,10 @@ private:
     auto now = this->now();
     auto elapsed = now - start_time;
 
-    //Shows in terminal completion status report 
-    RCLCPP_INFO(this->get_logger(), "--- Current Task Report ---");
-    RCLCPP_INFO(this->get_logger(), "Total Mission Time: %.2f seconds", elapsed.seconds());
-    for(size_t i = 0; i < task_list.size(); ++i) {
-        RCLCPP_INFO(this->get_logger(), "%s: %d", task_list[i].c_str(), task_completions[i]);
-    }
-
-    // If delivery has been completed at least twice, write JSON file report
-    if(task_completions[5] > 2 && !report_saved) { 
-      auto now = std::chrono::system_clock::now();
-      auto time = std::chrono::system_clock::to_time_t(now);
+    // If told to finish, write JSON file report
+    if(msg->data == "finish") { 
+      auto system_now = std::chrono::system_clock::now();
+      auto time = std::chrono::system_clock::to_time_t(system_now);
 
       std::stringstream ss;
 
@@ -72,7 +71,7 @@ private:
         "%Y-%m-%d_%H-%M-%S"
       );
       std::string filename =
-        "src/warehouse_stack/src/performance_logs/mission_report_" +
+        "src/warehouse_stack/src/performance_logs/mission_report_v1.1_" +
         ss.str() +
         ".json";
 
@@ -82,17 +81,15 @@ private:
       file << "  \"report_timestamp\": \"" << ss.str() << "\",\n";
 
       double total_seconds = elapsed.seconds();
+      // format total time elapsed
       int minutes = static_cast<int>(total_seconds) / 60;
       double seconds = std::fmod(total_seconds, 60.0);
-
-      int code_minutes = static_cast<int>(code_time) / 60;
-      double code_seconds = std::fmod(code_time, 60.0);
-
-      double latency_drift_percent = (total_seconds - code_time) / code_time * 100;
+      // calculate frequency of average publishing in Hz
+      double average_frequency = packet_number / total_seconds; 
 
       file << "  \"mission_duration\": \""<< minutes << "m "<< std::fixed << std::setprecision(2)<< seconds << "s\",\n";
-      file << "  \"scheduled_runtime\": \""<< code_minutes << "m "<< std::fixed << std::setprecision(2)<< code_seconds << "s\",\n";
-      file << "  \"latency_drift\": \""<< std::fixed << std::setprecision(2)<< latency_drift_percent << "%\",\n";
+      file << "  \"target_publishing_rate\": \"" << "4.00 Hz" << "\",\n";
+      file << "  \"average_publishing_rate\": \"" << average_frequency << " Hz\",\n";
       file << "  \"tasks_completed\": {\n";
 
       for(size_t i = 0; i < task_list.size(); ++i)
@@ -119,7 +116,7 @@ private:
   }
 
   bool report_saved = false;
-  double code_time = 0.0;
+  double packet_number = 0.0;
 
   std::string current_task_name;
   std::vector<std::string> task_list;
@@ -134,5 +131,4 @@ int main(int argc, char * argv[])
   rclcpp::spin(std::make_shared<DataLogger>());
   rclcpp::shutdown();
   return 0;
-} 
-
+}

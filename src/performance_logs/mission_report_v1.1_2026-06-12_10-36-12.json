@@ -1,0 +1,14 @@
+{
+  "report_timestamp": "2026-06-12_10-36-12",
+  "mission_duration": "0m 57.48s",
+  "target_publishing_rate": "4.00 Hz",
+  "average_publishing_rate": "3.65 Hz",
+  "tasks_completed": {
+    "Package Pick Up": 1,
+    "Box": 1,
+    "Package Popcorn": 1,
+    "Wrapping": 0,
+    "Sealing": 0,
+    "Delivery": 0
+  }
+}
