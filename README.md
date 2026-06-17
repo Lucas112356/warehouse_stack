@@ -137,7 +137,7 @@ Y
 
 ## Roadmap
 - **v1.3:** Mission Interruption + Recovery
-- **v2.0:** Fleet communication
+- **v2.0:** Fleet Communication
 
 ## Author
 Lucas Kwan
