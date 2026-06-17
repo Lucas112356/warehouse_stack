@@ -8,10 +8,12 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-class TaskExecution : public rclcpp::Node {
+class TaskExecution : public rclcpp::Node 
+{
 public:
     TaskExecution() :
-    Node("task_execution_node") {
+    Node("task_execution_node") 
+    {
         this->declare_parameter("task_names", std::vector<std::string>{});
         this->declare_parameter("waypoint_x", std::vector<double>{});
         this->declare_parameter("waypoint_y", std::vector<double>{});
@@ -38,8 +40,9 @@ public:
 private:
    void topic_callback(const std_msgs::msg::String::SharedPtr msg) 
    {
-       // 1. Reset progress and state when interrupted or changing tasks
-       if(task_now != msg->data) {
+       // Reset progress and state when interrupted or changing tasks
+       if(task_now != msg->data) 
+       {
            task_now = msg->data;
            swap_msg.data = "stay";
            
@@ -50,16 +53,20 @@ private:
 
        double target_x = 0.0;
        double target_y = 0.0;
-
+       
+       // Move to origin
        if (msg->data == "Origin") {
            target_x = waypoint_x[0]; 
            target_y = waypoint_y[0];
         
        } 
+
+       // Move to a specific task
        else 
        {
            auto it = std::find(task_names.begin(), task_names.end(), msg->data);
-           if (it != task_names.end()) {
+           if (it != task_names.end()) 
+           {
                index = std::distance(task_names.begin(), it);
                target_x = waypoint_x[index];
                target_y = waypoint_y[index];
@@ -88,14 +95,16 @@ private:
         }
 
         // Complete the task when the robot is at the location and isn't in closing mode
-        if (dist < 0.01 && at_task && task_now != "Origin") {
-            if(progress < 100.0) {
+        if (dist < 0.01 && at_task && task_now != "Origin" && task_now != "Charging") {
+            if(progress < 100.0) 
+            {
                 progress+=2.5;
                 RCLCPP_INFO(this->get_logger(), "Completing task: \"%s\" (%.2f%%)", 
                     task_names[index].c_str(), progress);
             }
             // Signal to move ot the next task
-            else {
+            else 
+            {
                 RCLCPP_INFO(this->get_logger(), "%s completed at 100%%!", task_names[index].c_str());
                 progress = 0.0; 
                 at_task = false;
@@ -104,9 +113,12 @@ private:
         }
         
         // Signal to finish logging then shut down
-        if (task_now == "Origin" && at_task) {
+        if (task_now == "Origin" && at_task) 
+        {
             swap_msg.data = "finished";
         }
+        
+        // Publish to the topic "swap_task"
         swap_publisher->publish(swap_msg);
     }
 

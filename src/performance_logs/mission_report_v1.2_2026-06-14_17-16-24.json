@@ -1,0 +1,22 @@
+{
+  "report_timestamp": "2026-06-14_17-16-24",
+  "mission_duration": "4m 22.52s",
+  "target_publishing_rate": "4.00 Hz",
+  "average_publishing_rate": "3.68 Hz",
+  "total_tasks_completed": 16,
+  "full_rounds_completed": 2,
+  "tasks_completed": {
+    "Package Pick Up": 3,
+    "Box": 3,
+    "Package Popcorn": 3,
+    "Wrapping": 3,
+    "Sealing": 2,
+    "Delivery": 2
+  },
+  "battery_report": {
+    "initial_battery_level": "100.00%",
+    "final_battery_level": "41.00%",
+    "lowest_battery_level": "8.30%",
+    "charging_cycles": 0
+  }
+}

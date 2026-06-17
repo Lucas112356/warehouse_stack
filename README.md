@@ -1,16 +1,20 @@
 # ROS2 Warehouse Management Simulation
 
 ## Overview
-A ROS2 (C++) warehouse automation simulation designed to model task scheduling, mission execution, location tracking, and operational reporting within a multi-node robotic system.
+A C++ ROS2 warehouse automation simulation featuring a distributed, multi-node architecture for state control, autonomous task scheduling, real-time location tracking and resource management.
 
-The project demonstrates distributed ROS2 node communication through a publisher-subscriber architecture while simulating warehouse workflows and generating automated mission performance reports.
+The system orchestrates end to end mission execution from battery monitoring and task cycling to graceful node termination. After program termination, the system generates comprehensive JSON telemetry reports to analyze operational efficiency and task performance.
 
-## Latest Update: v1.1
-- **Closing Status:** Added a dedicated operational state for system shutdown.
-- **Return-to-Home:** Robot now returns to origin before finalizing during closing status.
-- **JSON Reporting:** Mission reports are now triggered automatically upon returning to origin instead of task completion basis.
-- **Proper Termination:** All nodes now gracefully shutdown after the report is generated.
+## Latest Update: v1.2
+**Battery Resource Management**
 
+Version 1.2 introduces autonomous battery monitoring and state shifting to charge status. The robot continuously tracks its battery level during operation and can temporarily suspend mission execution when power reaches a critical threshold.    
+
+**Key Features:**
+- **Charging Status:** Added a dedicated operational state that directs the robot to navigate to the charging station.
+- **Charging Station:** New waypoint located at (0,5) in warehouse.
+- **Head to Charger:** Robot now goes to the charger in the warehouse after turning to charging status.
+- **JSON Reporting:** Mission reports now include initial charge, final charge, lowest recorded charge, and charging cycle statistics.
 ## Features
 - Multi-node ROS2 architecture
 - Warehouse task scheduling and execution
@@ -20,31 +24,31 @@ The project demonstrates distributed ROS2 node communication through a publisher
 - Automated JSON mission report generation
 - Mission duration and timing analysis
 - Performance logging and task completion metrics
+- Battery resource management
+- External mission override
 - Automated mission finalization and graceful node termination
 
 ## System Architecture
-```text
-                  User Input
-                      ↓
-                Status Monitor
-                      ↓
-                 Task Manager
-                ↙          ↘
-               ↓             ↕
-       Data Logger     Task Execution
-                             ↕
-                      Location Tracker
+```mermaid
+graph TD
+    UI[User Input] --> SM[Status Monitor]
+    LT[Location Tracker] --> SM
+    SM --> DL[Data Logger]
+    SM --> TM[Task Manager]
+    TM --> DL
+    TM <--> TE[Task Execution]
+    TE <--> LT
 ```
 
 
 ## Node Responsibilities
 | Node                 | Responsibility                                                                                                                    |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **Status Monitor**   | Receives operator commands and manages the robot's current operational state. |
-| **Task Manager**     | Central coordinator responsible for task scheduling, mission progression and workflow decisions.                     |
-| **Task Execution**   | Executes warehouse tasks based on current state and reports task completion status.                                         |
-| **Location Tracker** | Maintains the robot's current position and provides navigation feedback.                                        |
-| **Data Logger**      | Records mission metrics, task completion statistics, recording frequency and generates JSON mission reports.                      |
+| **Status Monitor**   | Receives operator commands, manages the robot's current operational state and monitors the robot's battery resource |
+| **Task Manager**     | Central coordinator responsible for task scheduling, mission progression and workflow decisions. |
+| **Task Execution**   | Executes warehouse tasks based on current state and reports task completion status.|
+| **Location Tracker** | Maintains the robot's current position and provides navigation feedback.|
+| **Data Logger**      | Records recording frequency, task completion statistics, battery report data and generates JSON mission reports.|
 
 ## Warehouse Layout
 ```text
@@ -55,7 +59,7 @@ Y
 8 |  . W . . . S . . . . .
 7 |  . . . . . . . . . . .
 6 |  . . . . . . . . . . .
-5 |  . . . . . . . . . . D
+5 |  C . . . . . . . . . D
 4 |  . . . . . . . . . . .
 3 |  . . . . . . . . . . .
 2 |  . . . . . . . . . P .
@@ -75,49 +79,64 @@ Y
 | W | Wrapping Station | (1,8) |
 | S | Sealing Station | (5,8) |
 | D | Delivery Station | (10,5) |
+|C  | Charging Station | (0,5) |
 
 ## Example Mission Report
 ```json
 {
-  "report_timestamp": "2026-06-12_10-26-29",
-  "mission_duration": "3m 2.15s",
+  "report_timestamp": "2026-06-13_19-15-59",
+  "mission_duration": "4m 47.23s",
   "target_publishing_rate": "4.00 Hz",
-  "average_publishing_rate": "3.78 Hz",
+  "average_publishing_rate": "3.63 Hz",
+  "total_tasks_completed": 16,
+  "full_rounds_completed": 2,
   "tasks_completed": {
-    "Package Pick Up": 2,
-    "Box": 2,
-    "Package Popcorn": 2,
-    "Wrapping": 2,
+    "Package Pick Up": 3,
+    "Box": 3,
+    "Package Popcorn": 3,
+    "Wrapping": 3,
     "Sealing": 2,
     "Delivery": 2
+  },
+  "battery_report": {
+    "initial_battery_level": "100.00%",
+    "final_battery_level": "74.90%",
+    "lowest_battery_level": "8.30%",
+    "charging_cycles": 1
   }
 }
+
 ```
-## Verification Results
+## System Verification Results
 | Condition | Result |
 | :--- | :--- |
 | Target Publishing Rate | 4.00 Hz |
-| Observed Publishing Rate | 3.65 - 4.00 Hz |
-| Longest Validation Run | 4 mission cycles |
-| Maximum Tasks Completed | 24 consecutive tasks |
-| Graceful Shutdown Verrified | Passed |
+| Observed Publishing Rate | 3.63 Hz - 4.00 Hz |
+| Maximum Tasks Completed | 30 consecutive tasks |
+| Longest Validation Run | 5 mission cycles |
+| Graceful Shutdown Verified | Passed |
+| Task Continuity After Charging| Passed|
 
 ## Technologies
 - ROS2
 - C++
 - CMake
 - JSON
-- Publisher-Subscriber Communication
-- State Management
-- Task Scheduling
+- Publisher-Subscriber Architecture
+- Distributed Node Communication
+- State Machine Design
+- Task Scheduling and Mission Management
+- Operator Initiated Mission Termination
+- Battery Resource Management
+- Telemetry and Performance Reporting
 
 ## Version History
-- **v1.0:** Initial release featuring task looping + basic JSON reporting.
-- **v1.1:** Closing status, return-to-home functionality and proper node termination.
+- **v1.0:** Task Looping + JSON Reporting
+- **v1.1:** Closing + Return to Base
+- **v1.2:** Battery Management + Charging Station
 
 ## Roadmap
-- **v1.2:** Battery management + charging station
-- **v1.3:** Mission interruption + recovery
+- **v1.3:** Mission Interruption + Recovery
 - **v2.0:** Fleet communication
 
 ## Author

@@ -19,7 +19,7 @@ def generate_launch_description():
         parameters=[config]
     )
 
-    # terminates all nodes when data_logger finishes
+    # Terminates all nodes when data_logger finishes
     sys_shutdown_handler = RegisterEventHandler(
         OnProcessExit(
             target_action=data_logger_node,

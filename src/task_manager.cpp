@@ -7,11 +7,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 
-class TaskManager : public rclcpp::Node {
+class TaskManager : public rclcpp::Node 
+{
 public:
     TaskManager() : 
-    Node("task_manager_node"), current_task_index(0) {
-        // List of 6 tasks done in the warehouse
+    Node("task_manager_node"), current_task_index(0) 
+    {
+        // List of tasks done in the warehouse
         task_list = {
             "Package Pick Up", 
             "Box", 
@@ -37,28 +39,31 @@ private:
     auto message = std_msgs::msg::String();
     // When the status is "Active", publish the current task
     if (msg->data == "Active")
-        {
-            message.data = task_list[current_task_index];
-            RCLCPP_INFO(this->get_logger(), "Current Task Set: '%s'", message.data.c_str());
-            // Publish the current task to the topic
-            task_publisher->publish(message);
-        }
+    {
+        message.data = task_list[current_task_index];
+        RCLCPP_INFO(this->get_logger(), "Current Task Set: '%s'", message.data.c_str());
+    }
+
     // When the status is "Closing", publish "Closing"
     else if (msg->data == "Closing")
-        {
-            message.data = "Origin";
-            RCLCPP_INFO(this->get_logger(), "Returning to '%s'.", message.data.c_str());
-            // Publish the current task to the topic
-            task_publisher->publish(message);
-        }
+    {
+        message.data = "Origin";
+    }
+
+    // When status is "Charge", publish "Charging"
+    else if (msg->data == "Charge")
+    {
+        message.data = "Charging";
+    }
+
     // When the status is invalid, publish "Unknown"
     else
-        {
-            message.data = "Unknown";
-            RCLCPP_INFO(this->get_logger(), "Unknown status: '%s'", message.data.c_str());
-            // Publish the current task to the topic
-            task_publisher->publish(message);
-        }
+    {
+        message.data = "Unknown";
+    }
+
+    // Publish the current task to the topic "current_task"
+    task_publisher->publish(message);
 }
 
     void swap_callback(const std_msgs::msg::String::SharedPtr msg) 
@@ -68,13 +73,15 @@ private:
     {
         current_task_index = (current_task_index + 1) % task_list.size();
     }
+
     else if (msg->data == "finished")
     {
         auto message = std_msgs::msg::String();
         message.data = "finish";
-        RCLCPP_INFO(this->get_logger(), "We are '%s'.", message.data.c_str());
+        // Publish the finish message to the topic "current_task"
         task_publisher->publish(message);
     }
+
     else
     {
         // Ignore unknown messages
